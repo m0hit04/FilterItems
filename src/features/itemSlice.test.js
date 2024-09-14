@@ -1,40 +1,38 @@
+import { configureStore } from '@reduxjs/toolkit';
 import itemsReducer, { setSearchTerm, setCurrentPage } from './itemSlice';
 
-// Initial state as defined in the slice
-const initialState = {
-  items: Array.from({ length: 100 }, (_, i) => `Item ${i + 1}`), // 100 items
-  searchTerm: '',
-  currentPage: 1,
-  itemsPerPage: 10,
-};
+describe('itemsSlice', () => {
+  let store;
 
-describe('itemsSlice reducer', () => {
-  it('should return the initial state', () => {
-    expect(itemsReducer(undefined, {})).toEqual(initialState);
+  beforeEach(() => {
+    store = configureStore({ reducer: { items: itemsReducer } });
   });
 
-  it('should handle setSearchTerm', () => {
-    const searchTerm = 'Item 1';
-    const action = setSearchTerm(searchTerm);
-
-    const expectedState = {
-      ...initialState,
-      searchTerm,
-      currentPage: 1, // Reset to first page on search term change
-    };
-
-    expect(itemsReducer(initialState, action)).toEqual(expectedState);
+  test('should handle initial state', () => {
+    const state = store.getState().items;
+    expect(state.items.length).toBe(100); // Assuming initial state has 100 items
+    expect(state.searchTerm).toBe('');
+    expect(state.currentPage).toBe(1);
+    expect(state.itemsPerPage).toBe(10);
   });
 
-  it('should handle setCurrentPage', () => {
-    const page = 2;
-    const action = setCurrentPage(page);
+  test('should handle setSearchTerm action', () => {
+    store.dispatch(setSearchTerm('New Term'));
+    const state = store.getState().items;
+    expect(state.searchTerm).toBe('New Term');
+    expect(state.currentPage).toBe(1); // Search resets to page 1
+  });
 
-    const expectedState = {
-      ...initialState,
-      currentPage: page,
-    };
+  test('should handle setCurrentPage action', () => {
+    store.dispatch(setCurrentPage(5));
+    const state = store.getState().items;
+    expect(state.currentPage).toBe(5);
+  });
 
-    expect(itemsReducer(initialState, action)).toEqual(expectedState);
+  test('should reset currentPage when searchTerm is updated', () => {
+    store.dispatch(setCurrentPage(10)); // Set to a page other than 1
+    store.dispatch(setSearchTerm('Updated Search'));
+    const state = store.getState().items;
+    expect(state.currentPage).toBe(1); // Page should reset to 1 on search term change
   });
 });
